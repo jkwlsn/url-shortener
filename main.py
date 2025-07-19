@@ -97,6 +97,16 @@ async def generate_unique_slug(db: AsyncSession) -> str:
         if not slug_exists:
             return slug
 
+
+async def generate_short_url(db: AsyncSession, long_url: HttpUrl) -> str:
+    slug: str = await generate_unique_slug(db)
+    link = Link(slug=slug, long_url=long_url)
+    db.add(link)
+    await db.commit()
+    await db.refresh(link)
+    return f"{BASE_URL}/{slug}"
+
+
 def main() -> None:
     pass
 
