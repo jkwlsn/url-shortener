@@ -4,7 +4,7 @@ import string
 
 from dotenv import dotenv_values
 from pydantic import BaseModel, Field, HttpUrl
-from sqlalchemy import Identity, Integer, String
+from sqlalchemy import Identity, Integer, String, select
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -86,6 +86,16 @@ class ShortUrlReturn(BaseModel):
 def generate_slug(length: int) -> str:
     base62: str = string.ascii_letters + string.digits
     return "".join(secrets.choice(seq=base62) for _ in range(length))
+
+
+async def generate_unique_slug(db: AsyncSession) -> str:
+    while True:
+        slug: str = generate_slug(SLUG_LENGTH)
+        slug_exists: Link | None = await db.scalar(
+            select(Link).where(Link.slug == slug)
+        )
+        if not slug_exists:
+            return slug
 
 def main() -> None:
     pass
