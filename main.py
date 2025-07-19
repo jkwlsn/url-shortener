@@ -1,6 +1,7 @@
 import asyncio
 
 from dotenv import dotenv_values
+from pydantic import BaseModel, Field, HttpUrl
 from sqlalchemy import Identity, Integer, String
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -53,6 +54,25 @@ class Link(Base):
         return (
             f"Link(link_id={self.link_id}, slug={self.slug}, long_url={self.long_url})"
         )
+
+
+"""Pydantic models"""
+
+
+class LongUrlAccept(BaseModel):
+    long_url: HttpUrl = Field(min_length=15)
+
+
+class SlugAccept(BaseModel):
+    slug: str = Field(pattern=r"^[A-Za-z0-9]{7}$")
+
+
+class LongUrlReturn(BaseModel):
+    long_url: HttpUrl
+
+
+class ShortUrlReturn(BaseModel):
+    short_url: HttpUrl
 
 
 def main() -> None:
