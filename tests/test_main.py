@@ -1,15 +1,12 @@
+import re
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from pydantic import HttpUrl, ValidationError
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from main import (
-    LongUrlAccept,
-    LongUrlReturn,
-    ShortUrlReturn,
-    SlugAccept,
-    async_session,
-    main,
-)
+from main import *
 
 
 class TestMain:
@@ -109,3 +106,47 @@ class TestMain:
             ShortUrlReturn(**invalid_data)
 
         assert "validation error" in str(e.value)
+
+    """ Test Slug and Short Link Service """
+
+    def test_generate_valid_slug(self) -> None:
+        result = generate_slug(7)
+
+        assert re.match("^[A-Za-z0-9]{7}$", result)
+
+    @pytest.mark.asyncio
+    async def test_generate_unique_slug_no_clash(self) -> None:
+        mock_db = AsyncMock(AsyncSession)
+        mock_db.scalar.return_value = None
+
+        slug = await generate_unique_slug(mock_db)
+
+        assert isinstance(slug, str)
+        assert len(slug) == 7
+        assert mock_db.scalar.await_count == 1
+
+    @pytest.mark.asyncio
+    async def test_generate_unique_slug_does_clash(self) -> None:
+        mock_db = AsyncMock(AsyncSession)
+
+        mock_db.scalar.side_effect = ["ABCDEFG", None]
+
+        slug = await generate_unique_slug(mock_db)
+
+        assert isinstance(slug, str)
+        assert len(slug) == 7
+        assert mock_db.scalar.await_count == 2
+
+    @pytest.mark.asyncio
+    @patch("main.generate_unique_slug", new_callable=AsyncMock)
+    async def test_generate_short_url(
+        self, mock_generate_unique_slug: MagicMock
+    ) -> None:
+        mock_db = AsyncMock(AsyncSession)
+        mock_generate_unique_slug.return_value = "A1b2C3d"
+        long_url = "https://example.com/a/deep/page/and-some-more-information-here.html"
+
+        short_url: str = await generate_short_url(mock_db, long_url)
+
+        assert isinstance(short_url, str)
+        assert short_url == "https://jkwlsn.dev/A1b2C3d"

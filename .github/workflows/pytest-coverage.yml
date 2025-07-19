@@ -24,6 +24,8 @@ jobs:
               POSTGRES_DB=${{ vars.POSTGRES_DB }}
               POSTGRES_HOST=${{ vars.POSTGRES_HOST }}
               POSTGRES_PORT=${{ vars.POSTGRES_PORT }}
+              SLUG_LENGTH=${{ vars.SLUG_LENGTH }}
+              BASE_URL=${{ vars.BASE_URL }}
               EOF
         - name: Install Docker
           uses: docker/setup-compose-action@v1

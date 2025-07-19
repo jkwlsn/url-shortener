@@ -1,8 +1,10 @@
 import asyncio
+import secrets
+import string
 
 from dotenv import dotenv_values
 from pydantic import BaseModel, Field, HttpUrl
-from sqlalchemy import Identity, Integer, String
+from sqlalchemy import Identity, Integer, String, select
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -13,6 +15,9 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 """Get settings from .env"""
 SETTINGS: dict[str, str | None] = {**dotenv_values(dotenv_path=".env")}
+
+BASE_URL: str = SETTINGS["BASE_URL"]
+SLUG_LENGTH: int = int(SETTINGS["SLUG_LENGTH"])
 
 """Construct database connection string"""
 db: dict[str, str | None] = {
@@ -73,6 +78,33 @@ class LongUrlReturn(BaseModel):
 
 class ShortUrlReturn(BaseModel):
     short_url: HttpUrl
+
+
+""" Slug / short link service """
+
+
+def generate_slug(length: int) -> str:
+    base62: str = string.ascii_letters + string.digits
+    return "".join(secrets.choice(seq=base62) for _ in range(length))
+
+
+async def generate_unique_slug(db: AsyncSession) -> str:
+    while True:
+        slug: str = generate_slug(SLUG_LENGTH)
+        slug_exists: Link | None = await db.scalar(
+            select(Link).where(Link.slug == slug)
+        )
+        if not slug_exists:
+            return slug
+
+
+async def generate_short_url(db: AsyncSession, long_url: HttpUrl) -> str:
+    slug: str = await generate_unique_slug(db)
+    link = Link(slug=slug, long_url=long_url)
+    db.add(link)
+    await db.commit()
+    await db.refresh(link)
+    return f"{BASE_URL}/{slug}"
 
 
 def main() -> None:
