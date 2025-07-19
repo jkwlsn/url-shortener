@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "A simple URL shortener API"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "psycopg>=3.2.9",
+]
 
 [dependency-groups]
 dev = [
