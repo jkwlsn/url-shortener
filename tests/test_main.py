@@ -2,6 +2,7 @@ import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 from pydantic import HttpUrl, ValidationError
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -174,3 +175,15 @@ class TestMain:
             await get_long_url(mock_db, slug)
 
         assert "slug" in str(e.value)
+
+    """ FastAPI Routes """
+
+    @pytest.mark.asyncio
+    async def test_root(self) -> None:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/")
+
+        assert response.status_code == 200
+        assert response.json() == {"message": "Nice day for a picnic!"}
