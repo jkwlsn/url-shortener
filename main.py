@@ -4,7 +4,7 @@ import string
 
 from dotenv import dotenv_values
 from fastapi import FastAPI
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 from sqlalchemy import Identity, Integer, String, select
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -20,8 +20,10 @@ app = FastAPI()
 """Get settings from .env"""
 SETTINGS: dict[str, str | None] = {**dotenv_values(dotenv_path=".env")}
 
-BASE_URL: str = SETTINGS["BASE_URL"]
-SLUG_LENGTH: int = int(SETTINGS["SLUG_LENGTH"])
+BASE_URL: str = SETTINGS.get("BASE_URL")
+SLUG_LENGTH: int = int(SETTINGS.get("SLUG_LENGTH"))
+MAX_URL_LENGTH: int = int(SETTINGS.get("MAX_URL_LENGTH"))
+MIN_URL_LENGTH: int = int(SETTINGS.get("MIN_URL_LENGTH"))
 
 """Construct database connection string"""
 DB_CONFIG: dict[str, str | None] = {
@@ -57,7 +59,9 @@ class Link(Base):
         Integer, Identity(always=True), primary_key=True
     )
     slug: Mapped[str] = mapped_column(String(), unique=True, index=True, nullable=False)
-    long_url: Mapped[str] = mapped_column(String(), unique=True, nullable=False)
+    long_url: Mapped[str] = mapped_column(
+        String(length=MAX_URL_LENGTH), unique=True, nullable=False
+    )
 
     def __repr__(self) -> str:
         return (
@@ -69,7 +73,18 @@ class Link(Base):
 
 
 class LongUrlAccept(BaseModel):
-    long_url: HttpUrl = Field(min_length=15)
+    long_url: HttpUrl
+
+    @field_validator("long_url", mode="before")
+    @classmethod
+    def validate_length(cls, long_url: str) -> str:
+        too_long: str = "URL too long"
+        too_short: str = "URL too short"
+        if len(long_url) > MAX_URL_LENGTH:
+            raise ValueError(too_long)
+        if len(long_url) < MIN_URL_LENGTH:
+            raise ValueError(too_short)
+        return long_url
 
 
 class SlugAccept(BaseModel):
