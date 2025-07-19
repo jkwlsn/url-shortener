@@ -3,6 +3,7 @@ import secrets
 import string
 
 from dotenv import dotenv_values
+from fastapi import FastAPI
 from pydantic import BaseModel, Field, HttpUrl
 from sqlalchemy import Identity, Integer, String, select
 from sqlalchemy.ext.asyncio import (
@@ -12,6 +13,9 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+app = FastAPI()
+
 
 """Get settings from .env"""
 SETTINGS: dict[str, str | None] = {**dotenv_values(dotenv_path=".env")}
@@ -117,6 +121,14 @@ async def get_long_url(db: AsyncSession, slug: str) -> str:
     if not result:
         raise NoMatchingSlugError(slug)
     return result.long_url
+
+
+""" FastAPI Routes """
+
+
+@app.get("/")
+async def read_root() -> dict:
+    return {"message": "Nice day for a picnic!"}
 
 
 def main() -> None:
