@@ -1,5 +1,5 @@
 def main() -> None:
-    print("Hello from url-shortener!")
+    pass
 
 
 if __name__ == "__main__":
