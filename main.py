@@ -3,7 +3,8 @@ import secrets
 import string
 
 from dotenv import dotenv_values
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 from sqlalchemy import Identity, Integer, String, select
 from sqlalchemy.ext.asyncio import (
@@ -153,6 +154,16 @@ async def create_short_url(payload: LongUrlAccept) -> ShortUrlReturn:
             db=session, long_url=str(payload.long_url)
         )
     return ShortUrlReturn(short_url=short_url)  # type: ignore
+
+
+@app.get("/{slug}")
+async def return_long_url(slug: str) -> RedirectResponse:
+    async with async_session() as session:
+        try:
+            long_url: str | None = await get_long_url(db=session, slug=slug)
+            return RedirectResponse(long_url)
+        except NoMatchingSlugError as e:
+            raise HTTPException(status_code=404, detail="No link found") from e
 
 
 def main() -> None:
