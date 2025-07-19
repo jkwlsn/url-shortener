@@ -186,4 +186,49 @@ class TestMain:
             response = await ac.get("/")
 
         assert response.status_code == 200
-        assert response.json() == {"message": "Nice day for a picnic!"}
+
+    @pytest.mark.asyncio
+    @patch("main.generate_short_url", new_callable=AsyncMock)
+    async def test_create_short_url_valid_long_url(
+        self, mock_generate_short_url: MagicMock
+    ) -> None:
+        mock_generate_short_url.return_value = "https://jkwlsn.dev/A1b2C3d"
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            payload = {"long_url": "https://www.example.com/page"}
+            response = await ac.post(url="/shorten", json=payload)
+
+        assert response.status_code == 200
+        assert response.json() == {"short_url": "https://jkwlsn.dev/A1b2C3d"}
+
+    @pytest.mark.asyncio
+    async def test_can_not_create_short_url_invalid_long_url(self) -> None:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            payload = {"long_url": "an-invalid-url"}
+            response = await ac.post(url="/shorten", json=payload)
+
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_can_not_create_short_url_long_url_too_long(self) -> None:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            payload = {"long_url": f"https://www.example.com/{'a' * 2500}"}
+            response = await ac.post(url="/shorten", json=payload)
+
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_can_not_create_short_url_long_url_too_short(self) -> None:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            payload = {"long_url": "http://bit.ly/"}
+            response = await ac.post(url="/shorten", json=payload)
+
+        assert response.status_code == 422
+        assert "long_url" in response.text
