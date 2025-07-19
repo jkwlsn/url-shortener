@@ -107,6 +107,18 @@ async def generate_short_url(db: AsyncSession, long_url: HttpUrl) -> str:
     return f"{BASE_URL}/{slug}"
 
 
+class NoMatchingSlugError(Exception):
+    def __init__(self, slug: str) -> None:
+        super().__init__(f"{slug} does not exist")
+
+
+async def get_long_url(db: AsyncSession, slug: str) -> str:
+    result: Link | None = await db.scalar(select(Link).where(Link.slug == slug))
+    if not result:
+        raise NoMatchingSlugError(slug)
+    return result.long_url
+
+
 def main() -> None:
     pass
 

@@ -150,3 +150,27 @@ class TestMain:
 
         assert isinstance(short_url, str)
         assert short_url == "https://jkwlsn.dev/A1b2C3d"
+
+    @pytest.mark.asyncio
+    async def test_long_url_with_matching_slug(self) -> None:
+        slug = "A1b2C3d"
+        long_url = "https://example.com/a/deep/page/and-some-more-information-here.html"
+        test_link = Link(link_id=1, slug=slug, long_url=long_url)
+        mock_db = AsyncMock(AsyncSession)
+        mock_db.scalar.return_value = test_link
+
+        result = await get_long_url(mock_db, slug)
+
+        assert result == long_url
+        assert mock_db.scalar.await_count == 1
+
+    @pytest.mark.asyncio
+    async def test_long_url_no_matching_slug(self) -> None:
+        slug = "an-invalid-slug"
+        mock_db = AsyncMock(AsyncSession)
+        mock_db.scalar.return_value = None
+
+        with pytest.raises(NoMatchingSlugError) as e:
+            await get_long_url(mock_db, slug)
+
+        assert "slug" in str(e.value)
