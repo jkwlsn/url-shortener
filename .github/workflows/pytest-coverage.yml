@@ -16,6 +16,25 @@ jobs:
             cache-dependency-glob: "**/uv.lock"
         - name: Install dependencies from pyproject.toml and uv.lock
           run: uv sync
+        - name: Create .env from repository variables
+          run: |
+              cat <<EOF > .env
+              POSTGRES_USER=${{ vars.POSTGRES_USER }}
+              POSTGRES_PASSWORD=${{ vars.POSTGRES_PASSWORD }}
+              POSTGRES_DB=${{ vars.POSTGRES_DB }}
+              POSTGRES_HOST=${{ vars.POSTGRES_HOST }}
+              POSTGRES_PORT=${{ vars.POSTGRES_PORT }}
+              EOF
+        - name: Install Docker
+          uses: docker/setup-compose-action@v1
+        - name: Run docker compose
+          run: docker compose up -d
+        - name: Wait for DB
+          run: |
+            until docker exec $(docker ps -qf "name=db") pg_isready -U ${{ vars.POSTGRES_USER }}; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+            done
         - name: Run Coverage and Pytest
           run: |
             uv run coverage run -m pytest -vvv
