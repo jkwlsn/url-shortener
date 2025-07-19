@@ -1,0 +1,20 @@
+name: Lint and format Ruff
+on: [pull_request]
+permissions:
+    checks: write
+    contents: write
+jobs:
+    ruff-lint-fix:
+        name: Run ruff linter and fixer
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out repo
+              uses: actions/checkout@v4
+            - name: Install Ruff
+              uses: astral-sh/ruff-action@v3
+              with:
+                args: "--version"
+            - name: Ruff check
+              run: ruff check
+            - name: Ruff format
+              run: ruff format
