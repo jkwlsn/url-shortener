@@ -1,0 +1,22 @@
+name: Run Coverage and Pytest
+on: [pull_request]
+jobs:
+  run-coverage-pytest:
+    name: Run coverage and pytest
+    runs-on: ubuntu-latest
+    steps:
+        - name: Set up Python
+          uses: actions/setup-python@v5
+        - name: Check out repo
+          uses: actions/checkout@v4
+        - name: Install the latest version of uv
+          uses: astral-sh/setup-uv@v6
+          with:
+            enable-cache: true
+            cache-dependency-glob: "**/uv.lock"
+        - name: Install dependencies from pyproject.toml and uv.lock
+          run: uv sync
+        - name: Run Coverage and Pytest
+          run: |
+            uv run coverage run -m pytest -vvv
+            uv run coverage report -m
