@@ -14,6 +14,9 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 """Get settings from .env"""
 SETTINGS: dict[str, str | None] = {**dotenv_values(dotenv_path=".env")}
 
+BASE_URL: str = SETTINGS["BASE_URL"]
+SLUG_LENGTH: int = int(SETTINGS["SLUG_LENGTH"])
+
 """Construct database connection string"""
 db: dict[str, str | None] = {
     "host": SETTINGS["POSTGRES_HOST"],
