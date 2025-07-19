@@ -1,4 +1,6 @@
 import asyncio
+import secrets
+import string
 
 from dotenv import dotenv_values
 from pydantic import BaseModel, Field, HttpUrl
@@ -77,6 +79,13 @@ class LongUrlReturn(BaseModel):
 class ShortUrlReturn(BaseModel):
     short_url: HttpUrl
 
+
+""" Slug / short link service """
+
+
+def generate_slug(length: int) -> str:
+    base62: str = string.ascii_letters + string.digits
+    return "".join(secrets.choice(seq=base62) for _ in range(length))
 
 def main() -> None:
     pass
