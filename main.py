@@ -20,7 +20,7 @@ BASE_URL: str = SETTINGS["BASE_URL"]
 SLUG_LENGTH: int = int(SETTINGS["SLUG_LENGTH"])
 
 """Construct database connection string"""
-db: dict[str, str | None] = {
+DB_CONFIG: dict[str, str | None] = {
     "host": SETTINGS["POSTGRES_HOST"],
     "port": SETTINGS["POSTGRES_PORT"],
     "user": SETTINGS["POSTGRES_USER"],
@@ -28,7 +28,7 @@ db: dict[str, str | None] = {
     "dbname": SETTINGS["POSTGRES_DB"],
 }
 
-DATABASE_URL: str = f"postgresql+psycopg_async://{db['user']}:{db['password']}@{db['host']}:{db['port']}/{db['dbname']}"
+DATABASE_URL: str = f"postgresql+psycopg_async://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
 
 """ Establish async connection to database """
 asyncio_engine: AsyncEngine = create_async_engine(url=DATABASE_URL, echo=True)
