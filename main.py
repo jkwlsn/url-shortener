@@ -1,3 +1,10 @@
+import os
+
+from dotenv import dotenv_values
+
+SETTINGS: dict[str, str | None] = {**dotenv_values(".env")}
+
+
 def main() -> None:
     pass
 
