@@ -1,0 +1,14 @@
+sequenceDiagram
+  actor User as User
+  participant Route as Route
+  participant Service as Service
+  participant DB as DB
+
+  User ->> Route: POST /shorten https://www.example.com/page
+  Route ->> Route: Validate with Pydantic model
+  Route ->> Service: Pass long_url
+  Service ->> Service: Generate slug (e.g. A1b2C3)
+  Service->> DB: Store slug and long_url (A1b2C3, https://www.example.com/page)
+  DB ->> Service: Return database model
+  Service ->> Route: Return Pydantic model
+  Route ->> User: Return {status: 200, short_url: "https://jkwlsn.dev/A1b2C3"}
