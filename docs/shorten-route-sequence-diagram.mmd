@@ -8,7 +8,8 @@ sequenceDiagram
   Route ->> Route: Validate with Pydantic model
   Route ->> Service: Pass long_url
   Service ->> Service: Generate slug (e.g. A1b2C3)
+  Service ->> Service: Create database model
   Service->> DB: Store slug and long_url (A1b2C3, https://www.example.com/page)
-  DB ->> Service: Return database model
-  Service ->> Route: Return Pydantic model
+  Service ->> Route: Return new short url
+  Route ->> Route: Validate with Pydantic model
   Route ->> User: Return {status: 200, short_url: "https://jkwlsn.dev/A1b2C3"}
