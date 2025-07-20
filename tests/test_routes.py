@@ -22,7 +22,7 @@ class TestRoutes:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    @patch("routes.create_short_url", new_callable=AsyncMock)
+    @patch("services.url.UrlService.create_short_url", new_callable=AsyncMock)
     async def test_return_short_url_valid_long_url(
         self, mock_create_short_url: MagicMock
     ) -> None:
@@ -68,11 +68,11 @@ class TestRoutes:
         assert "long_url" in response.text
 
     @pytest.mark.asyncio
-    @patch("services.short_url.generate_unique_slug", new_callable=AsyncMock)
+    @patch("services.url.UrlService.create_short_url", new_callable=AsyncMock)
     async def test_can_not_return_short_url_internal_error(
-        self, mock_generate_unique_slug: MagicMock
+        self, mock_create_short_url: MagicMock
     ) -> None:
-        mock_generate_unique_slug.side_effect = Exception("Internal error")
+        mock_create_short_url.side_effect = Exception("Internal error")
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
@@ -83,7 +83,7 @@ class TestRoutes:
         assert "Internal error" in response.text
 
     @pytest.mark.asyncio
-    @patch("routes.get_long_url", new_callable=AsyncMock)
+    @patch("services.url.UrlService.get_long_url", new_callable=AsyncMock)
     async def test_return_long_url_for_valid_slug(
         self, mock_get_long_url: MagicMock
     ) -> None:
@@ -97,7 +97,7 @@ class TestRoutes:
         assert response.is_redirect
 
     @pytest.mark.asyncio
-    @patch("routes.get_long_url", new_callable=AsyncMock)
+    @patch("services.url.UrlService.get_long_url", new_callable=AsyncMock)
     async def test_return_error_for_invalid_slug(
         self, mock_get_long_url: MagicMock
     ) -> None:
