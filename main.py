@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from database import create_tables, get_db
+from models import Link
 
 app: FastAPI = FastAPI(title=settings.app_name)
 
@@ -19,34 +20,6 @@ app: FastAPI = FastAPI(title=settings.app_name)
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     await create_tables()
     yield
-
-
-
-"""SQLAlchemy models"""
-
-
-class Base(DeclarativeBase):
-    pass
-
-
-class Link(Base):
-    __tablename__ = "links"
-
-    link_id: Mapped[int] = mapped_column(
-        Integer, Identity(always=True), primary_key=True
-    )
-    slug: Mapped[TEXT] = mapped_column(
-        String(), unique=True, index=True, nullable=False
-    )
-    long_url: Mapped[TEXT] = mapped_column(
-        String(length=settings.max_url_length), nullable=False
-    )
-
-    def __repr__(self) -> str:
-        return (
-            f"Link(link_id={self.link_id}, slug={self.slug}, long_url={self.long_url})"
-        )
-
 
 """ Custom errors """
 
