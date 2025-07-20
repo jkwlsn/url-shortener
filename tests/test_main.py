@@ -9,6 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import async_session
 from main import *
+from services.short_url import (
+    create_short_url,
+    generate_slug,
+    generate_unique_slug,
+)
 
 
 class TestMain:
@@ -133,8 +138,8 @@ class TestMain:
         assert mock_db.scalar.await_count == 2
 
     @pytest.mark.asyncio
-    @patch("main.generate_unique_slug", new_callable=AsyncMock)
-    async def test_create_short_url(self, mock_generate_unique_slug: MagicMock) -> None:
+    @patch("services.short_url.generate_unique_slug", new_callable=AsyncMock)
+    async def test_short_url(self, mock_generate_unique_slug: MagicMock) -> None:
         """Ensure valid short URLs are created
 
         The random slug should be appended to the base_url defined in .env"""
@@ -231,7 +236,7 @@ class TestMain:
         assert "long_url" in response.text
 
     @pytest.mark.asyncio
-    @patch("main.generate_unique_slug", new_callable=AsyncMock)
+    @patch("services.short_url.generate_unique_slug", new_callable=AsyncMock)
     async def test_can_not_return_short_url_internal_error(
         self, mock_generate_unique_slug: MagicMock
     ) -> None:
