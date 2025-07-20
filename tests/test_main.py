@@ -7,6 +7,7 @@ from pydantic import HttpUrl, ValidationError
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database import async_session
 from main import *
 
 
