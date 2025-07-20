@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from exceptions.exceptions import NoMatchingSlugError
+from exceptions.exceptions import LinkExpiredError, NoMatchingSlugError
 from main import app
 
 
@@ -106,3 +106,18 @@ class TestRoutes:
             response = await ac.get(url="/ABCD123")
 
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    @patch("services.url.UrlService.get_long_url", new_callable=AsyncMock)
+    async def test_return_error_for_expired_link(
+        self, mock_get_long_url: MagicMock
+    ) -> None:
+        mock_get_long_url.side_effect = LinkExpiredError("ABCD123")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(url="/ABCD123")
+        assert response.status_code == 410
+        assert response.json() == {
+            "detail": "ABCD123 has expired: older than 30 days old."
+        }

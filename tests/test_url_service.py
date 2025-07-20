@@ -1,10 +1,12 @@
 import re
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from exceptions.exceptions import NoMatchingSlugError
+from config.config import settings
+from exceptions.exceptions import LinkExpiredError, NoMatchingSlugError
 from models.models import Link
 from services.url import UrlService
 
@@ -53,10 +55,17 @@ class TestUrlService:
         """Test that a long URL can be retrieved by its slug."""
         slug = "A1b2C3d"
         long_url = "https://example.com/a/deep/page/and-some-more-information-here.html"
-        test_link = Link(link_id=1, slug=slug, long_url=long_url)
+        test_link = Link(
+            link_id=1,
+            slug=slug,
+            long_url=long_url,
+            created_ts=datetime.now(timezone.utc) - timedelta(days=1),
+        )
         mock_db = AsyncMock(AsyncSession)
         mock_db.scalar.return_value = test_link
+
         result = await UrlService().get_long_url(mock_db, slug)
+
         assert result == long_url
         assert mock_db.scalar.await_count == 1
 
@@ -69,3 +78,21 @@ class TestUrlService:
         with pytest.raises(NoMatchingSlugError) as e:
             await UrlService().get_long_url(mock_db, slug)
         assert "slug" in str(e.value)
+
+    @pytest.mark.asyncio
+    async def test_get_long_url_link_expired(self) -> None:
+        """Test that a long URL can be retrieved by its slug."""
+        slug = "A1b2C3d"
+        long_url = "https://example.com/a/deep/page/and-some-more-information-here.html"
+        test_link = Link(
+            link_id=1,
+            slug=slug,
+            long_url=long_url,
+            created_ts=datetime.now(timezone.utc)
+            - timedelta(days=settings.max_link_age + 10),
+        )
+        mock_db = AsyncMock(AsyncSession)
+        mock_db.scalar.return_value = test_link
+        with pytest.raises(LinkExpiredError) as e:
+            await UrlService().get_long_url(mock_db, slug)
+        assert "expired" in str(e.value)
