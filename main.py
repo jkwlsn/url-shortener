@@ -188,11 +188,3 @@ async def return_long_url(slug: str) -> RedirectResponse:
             return RedirectResponse(long_url)
         except NoMatchingSlugError as e:
             raise HTTPException(status_code=404, detail="No link found") from e
-
-
-def main() -> None:
-    pass
-
-
-if __name__ == "__main__":
-    main()
