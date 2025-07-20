@@ -121,7 +121,7 @@ class ShortUrlReturn(BaseModel):
     short_url: HttpUrl
 
 
-""" Slug / short link service """
+""" Short url service """
 
 
 def generate_slug(length: int) -> str:
@@ -139,7 +139,7 @@ async def generate_unique_slug(db: AsyncSession) -> str:
             return slug
 
 
-async def generate_short_url(db: AsyncSession, long_url: str) -> str:
+async def create_short_url(db: AsyncSession, long_url: str) -> str:
     slug: str = await generate_unique_slug(db)
     link = Link(slug=slug, long_url=long_url)
     db.add(link)
@@ -169,9 +169,9 @@ async def read_root() -> dict:
 
 
 @app.post("/shorten")
-async def create_short_url(payload: LongUrlAccept) -> ShortUrlReturn:
+async def return_short_url(payload: LongUrlAccept) -> ShortUrlReturn:
     async with async_session() as session:
-        short_url: str = await generate_short_url(
+        short_url: str = await create_short_url(
             db=session, long_url=str(payload.long_url)
         )
     return ShortUrlReturn(short_url=short_url)  # type: ignore

@@ -81,8 +81,8 @@ class TestMain:
 
         assert "validation error" in str(e.value)
 
-    def test_return_valid_short_urls(self) -> None:
-        """Application should return valid slugs"""
+    def test_pydantic_model_accept_valid_short_url(self) -> None:
+        """The ShortUrlReturn model should accept valid short urls"""
         data: dict[str, str] = {"short_url": "https://jkwlsn.dev/A1b2C3d"}
 
         schema: ShortUrlReturn = ShortUrlReturn(**data)
@@ -90,8 +90,8 @@ class TestMain:
         assert isinstance(schema.short_url, HttpUrl)
         assert str(schema.short_url) == "https://jkwlsn.dev/A1b2C3d"
 
-    def test_do_not_return_invalid_short_urls(self) -> None:
-        """Invalid short urls should not be returned"""
+    def test_pydantic_model_reject_invalid_short_url(self) -> None:
+        """The ShortUrlReturn model should reject invalid short urls"""
         invalid_data: dict[str, str] = {"short_url": "an-invalid-url"}
 
         with pytest.raises(ValidationError) as e:
@@ -99,31 +99,36 @@ class TestMain:
 
         assert "validation error" in str(e.value)
 
-    """ Test Slug and Short Link Service """
-
     def test_generate_valid_slug(self) -> None:
-        result = generate_slug(7)
+        """Generated slugs should be 7 upper and lower alphanumeric characters"""
+        result: str = generate_slug(7)
 
-        assert re.match("^[A-Za-z0-9]{7}$", result)
+        assert re.match(pattern="^[A-Za-z0-9]{7}$", string=result)
 
     @pytest.mark.asyncio
-    async def test_generate_unique_slug_no_clash(self) -> None:
-        mock_db = AsyncMock(AsyncSession)
+    async def test_generate_unique_slug_no_collision(self) -> None:
+        """Ensure slugs are be unique
+
+        This test will run ONCE to simulate the successful creation of a unique slug."""
+        mock_db: AsyncMock = AsyncMock(AsyncSession)
         mock_db.scalar.return_value = None
 
-        slug = await generate_unique_slug(mock_db)
+        slug: str = await generate_unique_slug(mock_db)
 
         assert isinstance(slug, str)
         assert len(slug) == 7
         assert mock_db.scalar.await_count == 1
 
     @pytest.mark.asyncio
-    async def test_generate_unique_slug_does_clash(self) -> None:
-        mock_db = AsyncMock(AsyncSession)
+    async def test_generate_unique_slug_one_collision(self) -> None:
+        """Ensure slugs are be unique
+
+        This test will run TWICE to simulate the successful creation of a non-unique and then unique slug."""
+        mock_db: AsyncMock = AsyncMock(AsyncSession)
 
         mock_db.scalar.side_effect = ["ABCDEFG", None]
 
-        slug = await generate_unique_slug(mock_db)
+        slug: str = await generate_unique_slug(mock_db)
 
         assert isinstance(slug, str)
         assert len(slug) == 7
@@ -131,24 +136,28 @@ class TestMain:
 
     @pytest.mark.asyncio
     @patch("main.generate_unique_slug", new_callable=AsyncMock)
-    async def test_generate_short_url(
+    async def test_create_short_url(
         self, mock_generate_unique_slug: MagicMock
     ) -> None:
-        mock_db = AsyncMock(AsyncSession)
+        """Ensure valid short URLs are created
+
+        The random slug should be appended to the base_url defined in .env"""
+        mock_db: AsyncMock = AsyncMock(AsyncSession)
         mock_generate_unique_slug.return_value = "A1b2C3d"
         long_url = "https://example.com/a/deep/page/and-some-more-information-here.html"
 
-        short_url: str = await generate_short_url(mock_db, long_url)
+        short_url: str = await create_short_url(mock_db, long_url)
 
         assert isinstance(short_url, str)
         assert short_url == "https://jkwlsn.dev/A1b2C3d"
 
     @pytest.mark.asyncio
-    async def test_long_url_with_matching_slug(self) -> None:
+    async def test_get_long_url_by_slug_success(self) -> None:
+        """If there is a slug and a matching long_url in the database, we should be able to find it"""
         slug = "A1b2C3d"
         long_url = "https://example.com/a/deep/page/and-some-more-information-here.html"
-        test_link = Link(link_id=1, slug=slug, long_url=long_url)
-        mock_db = AsyncMock(AsyncSession)
+        test_link: Link = Link(link_id=1, slug=slug, long_url=long_url)
+        mock_db: AsyncMock = AsyncMock(AsyncSession)
         mock_db.scalar.return_value = test_link
 
         result = await get_long_url(mock_db, slug)
@@ -157,7 +166,8 @@ class TestMain:
         assert mock_db.scalar.await_count == 1
 
     @pytest.mark.asyncio
-    async def test_long_url_no_matching_slug(self) -> None:
+    async def test_get_long_url_by_slug_failure(self) -> None:
+        """If there is no matching slug in the database, we should return an error"""
         slug = "an-invalid-slug"
         mock_db = AsyncMock(AsyncSession)
         mock_db.scalar.return_value = None
@@ -179,11 +189,11 @@ class TestMain:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    @patch("main.generate_short_url", new_callable=AsyncMock)
-    async def test_create_short_url_valid_long_url(
-        self, mock_generate_short_url: MagicMock
+    @patch("main.create_short_url", new_callable=AsyncMock)
+    async def test_return_short_url_valid_long_url(
+        self, mock_create_short_url: MagicMock
     ) -> None:
-        mock_generate_short_url.return_value = "https://jkwlsn.dev/A1b2C3d"
+        mock_create_short_url.return_value = "https://jkwlsn.dev/A1b2C3d"
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
@@ -194,7 +204,7 @@ class TestMain:
         assert response.json() == {"short_url": "https://jkwlsn.dev/A1b2C3d"}
 
     @pytest.mark.asyncio
-    async def test_can_not_create_short_url_invalid_long_url(self) -> None:
+    async def test_can_not_return_short_url_invalid_long_url(self) -> None:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
@@ -204,7 +214,7 @@ class TestMain:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_can_not_create_short_url_long_url_too_long(self) -> None:
+    async def test_can_not_return_short_url_long_url_too_long(self) -> None:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
@@ -214,7 +224,7 @@ class TestMain:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_can_not_create_short_url_long_url_too_short(self) -> None:
+    async def test_can_not_return_short_url_long_url_too_short(self) -> None:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
