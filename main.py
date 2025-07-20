@@ -9,7 +9,7 @@ from routes import router as shorten_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator:
+async def lifespan(_: FastAPI) -> AsyncGenerator:
     await create_tables()
     yield
 

@@ -1,5 +1,7 @@
 """FastAPI Routes"""
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +22,7 @@ async def read_root() -> dict:
 
 @router.post("/shorten")
 async def return_short_url(
-    payload: LongUrlAccept, db: AsyncSession = Depends(get_db)
+    payload: LongUrlAccept, db: Annotated[AsyncSession, Depends(get_db)]
 ) -> ShortUrlReturn:
     try:
         short_url: str = await create_short_url(db=db, long_url=str(payload.long_url))
@@ -31,7 +33,7 @@ async def return_short_url(
 
 @router.get("/{slug}")
 async def return_long_url(
-    slug: str, db: AsyncSession = Depends(get_db)
+    slug: str, db: Annotated[AsyncSession, Depends(get_db)]
 ) -> RedirectResponse:
     try:
         long_url: str | None = await get_long_url(db=db, slug=slug)
