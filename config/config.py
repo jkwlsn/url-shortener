@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     slug_length: int = 7
     max_url_length: int = 2048
     min_url_length: int = 15
+    max_link_age: int = 30
 
     postgres_host: str
     postgres_port: int
