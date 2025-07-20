@@ -136,9 +136,7 @@ class TestMain:
 
     @pytest.mark.asyncio
     @patch("main.generate_unique_slug", new_callable=AsyncMock)
-    async def test_create_short_url(
-        self, mock_generate_unique_slug: MagicMock
-    ) -> None:
+    async def test_create_short_url(self, mock_generate_unique_slug: MagicMock) -> None:
         """Ensure valid short URLs are created
 
         The random slug should be appended to the base_url defined in .env"""
