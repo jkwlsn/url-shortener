@@ -1,3 +1,4 @@
+import asyncio
 import secrets
 import string
 
@@ -73,6 +74,16 @@ class Link(Base):
             f"Link(link_id={self.link_id}, slug={self.slug}, long_url={self.long_url})"
         )
 
+
+""" Create table"""
+
+
+async def create_tables() -> None:
+    async with asyncio_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+asyncio.run(create_tables())
 
 """Pydantic models"""
 
