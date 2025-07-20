@@ -1,10 +1,11 @@
 import secrets
 import string
 
-from dotenv import dotenv_values
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, Field, HttpUrl, SecretStr, field_validator
+from pydantic_core import Url
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Identity, Integer, String, select
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -17,24 +18,28 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 app = FastAPI()
 
 
-"""Get settings from .env"""
-SETTINGS: dict[str, str | None] = {**dotenv_values(dotenv_path=".env")}
+""" Pydantic settings """
 
-BASE_URL: str = SETTINGS.get("BASE_URL")
-SLUG_LENGTH: int = int(SETTINGS.get("SLUG_LENGTH"))
-MAX_URL_LENGTH: int = int(SETTINGS.get("MAX_URL_LENGTH"))
-MIN_URL_LENGTH: int = int(SETTINGS.get("MIN_URL_LENGTH"))
 
-"""Construct database connection string"""
-DB_CONFIG: dict[str, str | None] = {
-    "host": SETTINGS["POSTGRES_HOST"],
-    "port": SETTINGS["POSTGRES_PORT"],
-    "user": SETTINGS["POSTGRES_USER"],
-    "password": SETTINGS["POSTGRES_PASSWORD"],
-    "dbname": SETTINGS["POSTGRES_DB"],
-}
+class Settings(BaseSettings):
+    model_config: SettingsConfigDict = SettingsConfigDict(env_file=".env", frozen=True)
+    app_name: str = "Jake's URL Shortener"
+    base_url: HttpUrl = "https://jkwlsn.dev/"  # type: ignore
+    slug_length: int = 7
+    max_url_length: int = 2048
+    min_url_length: int = 15
+    postgres_host: str
+    postgres_port: int
+    postgres_user: str
+    postgres_password: SecretStr
+    postgres_db: str
 
-DATABASE_URL: str = f"postgresql+psycopg_async://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
+
+settings: Settings = Settings()
+
+""" Database Connection String """
+
+DATABASE_URL: str = f"postgresql+psycopg_async://{settings.postgres_user}:{settings.postgres_password.get_secret_value()}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
 
 """ Establish async connection to database """
 asyncio_engine: AsyncEngine = create_async_engine(url=DATABASE_URL, echo=True)
@@ -60,7 +65,7 @@ class Link(Base):
     )
     slug: Mapped[str] = mapped_column(String(), unique=True, index=True, nullable=False)
     long_url: Mapped[str] = mapped_column(
-        String(length=MAX_URL_LENGTH), unique=True, nullable=False
+        String(length=settings.max_url_length), unique=True, nullable=False
     )
 
     def __repr__(self) -> str:
@@ -80,9 +85,9 @@ class LongUrlAccept(BaseModel):
     def validate_length(cls, long_url: str) -> str:
         too_long: str = "URL too long"
         too_short: str = "URL too short"
-        if len(long_url) > MAX_URL_LENGTH:
+        if len(long_url) > settings.max_url_length:
             raise ValueError(too_long)
-        if len(long_url) < MIN_URL_LENGTH:
+        if len(long_url) < settings.min_url_length:
             raise ValueError(too_short)
         return long_url
 
@@ -109,7 +114,7 @@ def generate_slug(length: int) -> str:
 
 async def generate_unique_slug(db: AsyncSession) -> str:
     while True:
-        slug: str = generate_slug(SLUG_LENGTH)
+        slug: str = generate_slug(settings.slug_length)
         slug_exists: Link | None = await db.scalar(
             select(Link).where(Link.slug == slug)
         )
@@ -123,7 +128,7 @@ async def generate_short_url(db: AsyncSession, long_url: str) -> str:
     db.add(link)
     await db.commit()
     await db.refresh(link)
-    return f"{BASE_URL}/{slug}"
+    return f"{settings.base_url}{slug}"
 
 
 class NoMatchingSlugError(Exception):
