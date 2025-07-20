@@ -157,7 +157,7 @@ async def get_long_url(db: AsyncSession, slug: str) -> str:
     result: Link | None = await db.scalar(select(Link).where(Link.slug == slug))
     if not result:
         raise NoMatchingSlugError(slug)
-    return result.long_url
+    return str(result.long_url)
 
 
 """ FastAPI Routes """
