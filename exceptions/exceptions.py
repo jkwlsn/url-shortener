@@ -1,5 +1,7 @@
 """Custom errors"""
 
+from config.config import settings
+
 
 class URLTooLongError(ValueError):
     def __init__(self, url: str, limit: int) -> None:
@@ -19,3 +21,10 @@ class SelfReferencingURLError(ValueError):
 class NoMatchingSlugError(Exception):
     def __init__(self, slug: str) -> None:
         super().__init__(f"{slug} does not exist")
+
+
+class LinkExpiredError(Exception):
+    def __init__(self, slug: str) -> None:
+        super().__init__(
+            f"{slug} has expired: older than {settings.max_link_age} days old."
+        )
