@@ -99,31 +99,36 @@ class TestMain:
 
         assert "validation error" in str(e.value)
 
-    """ Test Slug and Short Link Service """
-
     def test_generate_valid_slug(self) -> None:
-        result = generate_slug(7)
+        """Generated slugs should be 7 upper and lower alphanumeric characters"""
+        result: str = generate_slug(7)
 
-        assert re.match("^[A-Za-z0-9]{7}$", result)
+        assert re.match(pattern="^[A-Za-z0-9]{7}$", string=result)
 
     @pytest.mark.asyncio
-    async def test_generate_unique_slug_no_clash(self) -> None:
-        mock_db = AsyncMock(AsyncSession)
+    async def test_generate_unique_slug_no_collision(self) -> None:
+        """Ensure slugs are be unique
+
+        This test will run ONCE to simulate the successful creation of a unique slug."""
+        mock_db: AsyncMock = AsyncMock(AsyncSession)
         mock_db.scalar.return_value = None
 
-        slug = await generate_unique_slug(mock_db)
+        slug: str = await generate_unique_slug(mock_db)
 
         assert isinstance(slug, str)
         assert len(slug) == 7
         assert mock_db.scalar.await_count == 1
 
     @pytest.mark.asyncio
-    async def test_generate_unique_slug_does_clash(self) -> None:
-        mock_db = AsyncMock(AsyncSession)
+    async def test_generate_unique_slug_one_collision(self) -> None:
+        """Ensure slugs are be unique
+
+        This test will run TWICE to simulate the successful creation of a non-unique and then unique slug."""
+        mock_db: AsyncMock = AsyncMock(AsyncSession)
 
         mock_db.scalar.side_effect = ["ABCDEFG", None]
 
-        slug = await generate_unique_slug(mock_db)
+        slug: str = await generate_unique_slug(mock_db)
 
         assert isinstance(slug, str)
         assert len(slug) == 7
@@ -134,7 +139,10 @@ class TestMain:
     async def test_generate_short_url(
         self, mock_generate_unique_slug: MagicMock
     ) -> None:
-        mock_db = AsyncMock(AsyncSession)
+        """Ensure valid short URLs are created
+
+        The random slug should be appended to the base_url defined in .env"""
+        mock_db: AsyncMock = AsyncMock(AsyncSession)
         mock_generate_unique_slug.return_value = "A1b2C3d"
         long_url = "https://example.com/a/deep/page/and-some-more-information-here.html"
 
