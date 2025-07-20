@@ -5,10 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from exceptions import (
-    NoMatchingSlugError,
-)
-from main import *
+from exceptions.exceptions import NoMatchingSlugError
+from main import app
 
 
 class TestRoutes:

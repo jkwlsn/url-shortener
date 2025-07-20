@@ -3,9 +3,9 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
-from config import settings
-from database import create_tables
-from routes import router as shorten_router
+from config.config import settings
+from database.database import create_tables
+from routes.routes import router as shorten_router
 
 
 @asynccontextmanager
