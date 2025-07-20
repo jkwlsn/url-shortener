@@ -235,6 +235,21 @@ class TestMain:
         assert "long_url" in response.text
 
     @pytest.mark.asyncio
+    @patch("main.generate_unique_slug", new_callable=AsyncMock)
+    async def test_can_not_return_short_url_internal_error(
+        self, mock_generate_unique_slug: MagicMock
+    ) -> None:
+        mock_generate_unique_slug.side_effect = Exception("Internal error")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            payload = {"long_url": "https://www.example.com/page"}
+            response = await ac.post(url="/shorten", json=payload)
+
+        assert response.status_code == 500
+        assert "Internal error" in response.text
+
+    @pytest.mark.asyncio
     @patch("main.get_long_url", new_callable=AsyncMock)
     async def test_return_long_url_for_valid_slug(
         self, mock_get_long_url: MagicMock
