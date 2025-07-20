@@ -28,6 +28,7 @@ jobs:
               BASE_URL=${{ vars.BASE_URL }}
               MAX_URL_LENGTH=${{ vars.MAX_URL_LENGTH }}
               MIN_URL_LENGTH=${{ vars.MIN_URL_LENGTH }}
+              MAX_LINK_AGE=${{ vars.MAX_LINK_AGE }}
               EOF
         - name: Install Docker
           uses: docker/setup-compose-action@v1
