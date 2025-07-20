@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, HttpUrl, SecretStr, field_validator
 from pydantic_core import Url
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Identity, Integer, String, select
+from sqlalchemy.dialects.postgresql import TEXT
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -43,7 +44,7 @@ settings: Settings = Settings()
 DATABASE_URL: str = f"postgresql+psycopg_async://{settings.postgres_user}:{settings.postgres_password.get_secret_value()}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
 
 """ Establish async connection to database """
-asyncio_engine: AsyncEngine = create_async_engine(url=DATABASE_URL, echo=True)
+asyncio_engine: AsyncEngine = create_async_engine(url=DATABASE_URL)
 
 async_session: async_sessionmaker[AsyncSession] = async_sessionmaker(
     bind=asyncio_engine,
@@ -64,9 +65,11 @@ class Link(Base):
     link_id: Mapped[int] = mapped_column(
         Integer, Identity(always=True), primary_key=True
     )
-    slug: Mapped[str] = mapped_column(String(), unique=True, index=True, nullable=False)
-    long_url: Mapped[str] = mapped_column(
-        String(length=settings.max_url_length), unique=True, nullable=False
+    slug: Mapped[TEXT] = mapped_column(
+        String(), unique=True, index=True, nullable=False
+    )
+    long_url: Mapped[TEXT] = mapped_column(
+        String(length=settings.max_url_length), nullable=False
     )
 
     def __repr__(self) -> str:
