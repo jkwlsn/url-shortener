@@ -2,7 +2,7 @@ import pytest
 from pydantic import HttpUrl, ValidationError
 
 from main import *
-from schemas import LongUrlAccept, LongUrlReturn, ShortUrlReturn
+from schemas import LongUrlAccept, ShortUrlReturn
 
 
 class TestPydantic:
@@ -37,29 +37,6 @@ class TestPydantic:
 
         with pytest.raises(ValidationError) as e:
             schema: LongUrlAccept = LongUrlAccept(**invalid_data)
-
-        assert "validation error" in str(e.value)
-
-    def test_return_valid_long_urls(self) -> None:
-        """Application should return valid URLs"""
-        data: dict[str, str] = {
-            "long_url": "https://example.com/a/deep/page/and-some-more-information-here.html"
-        }
-
-        schema: LongUrlReturn = LongUrlReturn(**data)
-
-        assert isinstance(schema.long_url, HttpUrl)
-        assert (
-            str(schema.long_url)
-            == "https://example.com/a/deep/page/and-some-more-information-here.html"
-        )
-
-    def test_do_not_return_invalid_long_urls(self) -> None:
-        """Invalid short urls should not be returned"""
-        invalid_data: dict = {"long_url": "an-invalid-url"}
-
-        with pytest.raises(ValidationError) as e:
-            LongUrlReturn(**invalid_data)
 
         assert "validation error" in str(e.value)
 

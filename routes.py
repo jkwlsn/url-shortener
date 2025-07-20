@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from exceptions import NoMatchingSlugError
-from schemas import LongUrlAccept, LongUrlReturn, ShortUrlReturn
+from schemas import LongUrlAccept, ShortUrlReturn
 from services.url import UrlService
 
 router = APIRouter()
