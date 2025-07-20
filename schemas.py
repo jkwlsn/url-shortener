@@ -26,9 +26,5 @@ class LongUrlAccept(BaseModel):
         return long_url
 
 
-class LongUrlReturn(BaseModel):
-    long_url: HttpUrl
-
-
 class ShortUrlReturn(BaseModel):
     short_url: HttpUrl

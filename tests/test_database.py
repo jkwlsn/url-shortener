@@ -2,7 +2,6 @@ import pytest
 from sqlalchemy import text
 
 from database import async_session
-from main import *
 
 
 class TestDatabase:
