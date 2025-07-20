@@ -4,8 +4,7 @@ import string
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, HttpUrl, SecretStr, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, HttpUrl, field_validator
 from sqlalchemy import Identity, Integer, String, select
 from sqlalchemy.dialects.postgresql import TEXT
 from sqlalchemy.ext.asyncio import (
@@ -16,34 +15,13 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-app = FastAPI()
+from config import settings
 
+app: FastAPI = FastAPI(title=settings.app_name)
 
-""" Pydantic settings """
-
-
-class Settings(BaseSettings):
-    model_config: SettingsConfigDict = SettingsConfigDict(env_file=".env", frozen=True)
-    app_name: str = "Jake's URL Shortener"
-    base_url: HttpUrl = "https://jkwlsn.dev/"  # type: ignore
-    slug_length: int = 7
-    max_url_length: int = 2048
-    min_url_length: int = 15
-    postgres_host: str
-    postgres_port: int
-    postgres_user: str
-    postgres_password: SecretStr
-    postgres_db: str
-
-
-settings: Settings = Settings()
-
-""" Database Connection String """
-
-DATABASE_URL: str = f"postgresql+psycopg_async://{settings.postgres_user}:{settings.postgres_password.get_secret_value()}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
 
 """ Establish async connection to database """
-asyncio_engine: AsyncEngine = create_async_engine(url=DATABASE_URL)
+asyncio_engine: AsyncEngine = create_async_engine(url=settings.database_url)
 
 async_session: async_sessionmaker[AsyncSession] = async_sessionmaker(
     bind=asyncio_engine,
