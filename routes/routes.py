@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_db
-from exceptions.exceptions import NoMatchingSlugError
+from exceptions.exceptions import LinkExpiredError, NoMatchingSlugError
 from schemas.schemas import LongUrlAccept, ShortUrlReturn
 from services.url import UrlService
 
@@ -27,9 +27,9 @@ async def return_short_url(
         short_url: str = await UrlService().create_short_url(
             db=db, long_url=str(payload.long_url)
         )
-        return ShortUrlReturn(short_url=short_url)  # type: ignore
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal error") from e
+    return ShortUrlReturn(short_url=short_url)  # type: ignore
 
 
 @router.get("/{slug}")
@@ -38,6 +38,8 @@ async def return_long_url(
 ) -> RedirectResponse:
     try:
         long_url: str | None = await UrlService().get_long_url(db=db, slug=slug)
-        return RedirectResponse(url=long_url if long_url else "/")
     except NoMatchingSlugError as e:
-        raise HTTPException(status_code=404, detail="No link found") from e
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except LinkExpiredError as e:
+        raise HTTPException(status_code=410, detail=str(e)) from e
+    return RedirectResponse(url=long_url if long_url else "/")
