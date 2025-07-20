@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, HttpUrl, SecretStr, field_validator
 from pydantic_core import Url
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Identity, Integer, String, select
+from sqlalchemy.dialects.postgresql import TEXT
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -63,9 +64,11 @@ class Link(Base):
     link_id: Mapped[int] = mapped_column(
         Integer, Identity(always=True), primary_key=True
     )
-    slug: Mapped[str] = mapped_column(String(), unique=True, index=True, nullable=False)
-    long_url: Mapped[str] = mapped_column(
-        String(length=settings.max_url_length), unique=True, nullable=False
+    slug: Mapped[TEXT] = mapped_column(
+        String(), unique=True, index=True, nullable=False
+    )
+    long_url: Mapped[TEXT] = mapped_column(
+        String(length=settings.max_url_length), nullable=False
     )
 
     def __repr__(self) -> str:
