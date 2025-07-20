@@ -3,13 +3,13 @@ from typing import AsyncGenerator
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from database import create_tables, get_db
-from models import Link
+from exceptions import NoMatchingSlugError
 from schemas import LongUrlAccept, LongUrlReturn, ShortUrlReturn
+from services.long_url import get_long_url
 from services.short_url import create_short_url
 
 app: FastAPI = FastAPI(title=settings.app_name)
@@ -19,18 +19,6 @@ app: FastAPI = FastAPI(title=settings.app_name)
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     await create_tables()
     yield
-
-
-class NoMatchingSlugError(Exception):
-    def __init__(self, slug: str) -> None:
-        super().__init__(f"{slug} does not exist")
-
-
-async def get_long_url(db: AsyncSession, slug: str) -> str:
-    result: Link | None = await db.scalar(select(Link).where(Link.slug == slug))
-    if not result:
-        raise NoMatchingSlugError(slug)
-    return str(result.long_url)
 
 
 """ FastAPI Routes """

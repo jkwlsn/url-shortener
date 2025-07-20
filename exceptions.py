@@ -14,3 +14,8 @@ class URLTooShortError(ValueError):
 class SelfReferencingURLError(ValueError):
     def __init__(self, url: str) -> None:
         super().__init__(f"Cannot shorten URLs pointing to the service itself: {url}")
+
+
+class NoMatchingSlugError(Exception):
+    def __init__(self, slug: str) -> None:
+        super().__init__(f"{slug} does not exist")

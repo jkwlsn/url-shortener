@@ -8,7 +8,14 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import async_session
+from exceptions import (
+    NoMatchingSlugError,
+    SelfReferencingURLError,
+    URLTooLongError,
+    URLTooShortError,
+)
 from main import *
+from models import Link
 from services.short_url import (
     create_short_url,
     generate_slug,
