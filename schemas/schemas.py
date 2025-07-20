@@ -2,8 +2,12 @@
 
 from pydantic import BaseModel, HttpUrl, field_validator
 
-from config import settings
-from exceptions import SelfReferencingURLError, URLTooLongError, URLTooShortError
+from config.config import settings
+from exceptions.exceptions import (
+    SelfReferencingURLError,
+    URLTooLongError,
+    URLTooShortError,
+)
 
 
 class LongUrlAccept(BaseModel):
