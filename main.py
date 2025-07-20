@@ -171,10 +171,13 @@ async def read_root() -> dict:
 @app.post("/shorten")
 async def return_short_url(payload: LongUrlAccept) -> ShortUrlReturn:
     async with async_session() as session:
-        short_url: str = await create_short_url(
-            db=session, long_url=str(payload.long_url)
-        )
-    return ShortUrlReturn(short_url=short_url)  # type: ignore
+        try:
+            short_url: str = await create_short_url(
+                db=session, long_url=str(payload.long_url)
+            )
+            return ShortUrlReturn(short_url=short_url)  # type: ignore
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Internal error") from e
 
 
 @app.get("/{slug}")
