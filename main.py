@@ -4,8 +4,7 @@ import string
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, Field, HttpUrl, SecretStr, field_validator
-from pydantic_core import Url
+from pydantic import BaseModel, HttpUrl, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import Identity, Integer, String, select
 from sqlalchemy.dialects.postgresql import TEXT
@@ -105,9 +104,13 @@ class LongUrlAccept(BaseModel):
             raise ValueError(too_short)
         return long_url
 
-
-class SlugAccept(BaseModel):
-    slug: str = Field(pattern=r"^[A-Za-z0-9]{7}$")
+    @field_validator("long_url")
+    @classmethod
+    def validate_reject_same_domain(cls, long_url: HttpUrl) -> HttpUrl:
+        same_host = "You can't make short links for this address"
+        if str(long_url.host) in str(settings.base_url):
+            raise ValueError(same_host)
+        return long_url
 
 
 class LongUrlReturn(BaseModel):

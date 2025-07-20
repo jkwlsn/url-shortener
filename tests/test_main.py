@@ -49,6 +49,15 @@ class TestMain:
 
         assert "validation error" in str(e.value)
 
+    def test_do_not_accept_recursive_long_urls(self) -> None:
+        """URLs from the same host should be rejected to prevent loops"""
+        invalid_data: dict[str, str] = {"long_url": "https://jkwlsn.dev/an-example-url"}
+
+        with pytest.raises(ValidationError) as e:
+            schema: LongUrlAccept = LongUrlAccept(**invalid_data)
+
+        assert "validation error" in str(e.value)
+
     def test_return_valid_long_urls(self) -> None:
         """Application should return valid URLs"""
         data: dict[str, str] = {
@@ -69,24 +78,6 @@ class TestMain:
 
         with pytest.raises(ValidationError) as e:
             LongUrlReturn(**invalid_data)
-
-        assert "validation error" in str(e.value)
-
-    def test_accept_valid_slugs(self) -> None:
-        """Valid slugs should be valid"""
-        data: dict[str, str] = {"slug": "A1b2C3d"}
-
-        schema: SlugAccept = SlugAccept(**data)
-
-        assert isinstance(schema.slug, str)
-        assert str(schema.slug) == "A1b2C3d"
-
-    def test_do_not_accept_invalid_slugs(self) -> None:
-        """Invalid slugs should raise ValidationErrors"""
-        invalid_data: dict[str, str] = {"slug": "an-invalid-slug"}
-
-        with pytest.raises(ValidationError) as e:
-            schema: SlugAccept = SlugAccept(**invalid_data)
 
         assert "validation error" in str(e.value)
 
