@@ -5,14 +5,13 @@ from typing import AsyncGenerator
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, HttpUrl, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from database import create_tables, get_db
-from exceptions import SelfReferencingURLError, URLTooLongError, URLTooShortError
 from models import Link
+from schemas import LongUrlAccept, LongUrlReturn, ShortUrlReturn
 
 app: FastAPI = FastAPI(title=settings.app_name)
 
@@ -21,37 +20,6 @@ app: FastAPI = FastAPI(title=settings.app_name)
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     await create_tables()
     yield
-
-
-"""Pydantic models"""
-
-
-class LongUrlAccept(BaseModel):
-    long_url: HttpUrl
-
-    @field_validator("long_url", mode="before")
-    @classmethod
-    def validate_length(cls, long_url: str) -> str:
-        if len(long_url) > settings.max_url_length:
-            raise URLTooLongError(long_url, settings.max_url_length)
-        if len(long_url) < settings.min_url_length:
-            raise URLTooShortError(long_url, settings.min_url_length)
-        return long_url
-
-    @field_validator("long_url")
-    @classmethod
-    def validate_reject_same_domain(cls, long_url: HttpUrl) -> HttpUrl:
-        if str(long_url.host) in str(settings.base_url):
-            raise SelfReferencingURLError(str(long_url))
-        return long_url
-
-
-class LongUrlReturn(BaseModel):
-    long_url: HttpUrl
-
-
-class ShortUrlReturn(BaseModel):
-    short_url: HttpUrl
 
 
 """ Short url service """
