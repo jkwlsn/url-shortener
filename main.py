@@ -87,6 +87,24 @@ async def create_tables() -> None:
 
 asyncio.run(create_tables())
 
+""" Custom errors """
+
+
+class URLTooLongError(ValueError):
+    def __init__(self, url: str, limit: int) -> None:
+        super().__init__(f"URL exceeds max length of {limit} characters: {url}")
+
+
+class URLTooShortError(ValueError):
+    def __init__(self, url: str, minimum: int) -> None:
+        super().__init__(f"URL shorter than minimum {minimum} characters: {url}")
+
+
+class SelfReferencingURLError(ValueError):
+    def __init__(self, url: str) -> None:
+        super().__init__(f"Cannot shorten URLs pointing to the service itself: {url}")
+
+
 """Pydantic models"""
 
 
@@ -96,20 +114,17 @@ class LongUrlAccept(BaseModel):
     @field_validator("long_url", mode="before")
     @classmethod
     def validate_length(cls, long_url: str) -> str:
-        too_long: str = "URL too long"
-        too_short: str = "URL too short"
         if len(long_url) > settings.max_url_length:
-            raise ValueError(too_long)
+            raise URLTooLongError(long_url, settings.max_url_length)
         if len(long_url) < settings.min_url_length:
-            raise ValueError(too_short)
+            raise URLTooShortError(long_url, settings.min_url_length)
         return long_url
 
     @field_validator("long_url")
     @classmethod
     def validate_reject_same_domain(cls, long_url: HttpUrl) -> HttpUrl:
-        same_host = "You can't make short links for this address"
         if str(long_url.host) in str(settings.base_url):
-            raise ValueError(same_host)
+            raise SelfReferencingURLError(str(long_url))
         return long_url
 
 
