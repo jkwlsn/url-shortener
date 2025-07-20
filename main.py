@@ -42,7 +42,7 @@ settings: Settings = Settings()
 DATABASE_URL: str = f"postgresql+psycopg_async://{settings.postgres_user}:{settings.postgres_password.get_secret_value()}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
 
 """ Establish async connection to database """
-asyncio_engine: AsyncEngine = create_async_engine(url=DATABASE_URL, echo=True)
+asyncio_engine: AsyncEngine = create_async_engine(url=DATABASE_URL)
 
 async_session: async_sessionmaker[AsyncSession] = async_sessionmaker(
     bind=asyncio_engine,
