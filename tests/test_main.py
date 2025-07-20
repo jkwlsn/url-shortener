@@ -49,6 +49,15 @@ class TestMain:
 
         assert "validation error" in str(e.value)
 
+    def test_do_not_accept_recursive_long_urls(self) -> None:
+        """URLs from the same host should be rejected to prevent loops"""
+        invalid_data: dict[str, str] = {"long_url": "https://jkwlsn.dev/an-example-url"}
+
+        with pytest.raises(ValidationError) as e:
+            schema: LongUrlAccept = LongUrlAccept(**invalid_data)
+
+        assert "validation error" in str(e.value)
+
     def test_return_valid_long_urls(self) -> None:
         """Application should return valid URLs"""
         data: dict[str, str] = {
