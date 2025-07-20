@@ -1,8 +1,7 @@
 import pytest
 from pydantic import HttpUrl, ValidationError
 
-from main import *
-from schemas import LongUrlAccept, ShortUrlReturn
+from schemas.schemas import LongUrlAccept, ShortUrlReturn
 
 
 class TestPydantic:

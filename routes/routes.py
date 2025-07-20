@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import get_db
-from exceptions import NoMatchingSlugError
-from schemas import LongUrlAccept, ShortUrlReturn
+from database.database import get_db
+from exceptions.exceptions import NoMatchingSlugError
+from schemas.schemas import LongUrlAccept, ShortUrlReturn
 from services.url import UrlService
 
 router = APIRouter()

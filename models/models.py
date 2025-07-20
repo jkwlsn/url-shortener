@@ -4,7 +4,7 @@ from sqlalchemy import Identity, Integer, String
 from sqlalchemy.dialects.postgresql import TEXT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from config import settings
+from config.config import settings
 
 
 class Base(DeclarativeBase):

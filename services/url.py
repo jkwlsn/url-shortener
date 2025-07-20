@@ -6,9 +6,9 @@ import string
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config import settings
-from exceptions import NoMatchingSlugError
-from models import Link
+from config.config import settings
+from exceptions.exceptions import NoMatchingSlugError
+from models.models import Link
 
 
 class UrlService:
