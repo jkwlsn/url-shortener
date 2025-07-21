@@ -62,7 +62,7 @@ A simple, RESTful URL shortener API
     POSTGRES_PORT=5432
     POSTGRES_DB=url_shortener
 
-    BASE_URL="http://localhost:8000/" # Make sure there is a trailing slash
+    BASE_URL=http://localhost:8000/ # Make sure there is a trailing slash
     SLUG_LENGTH=7
 
     MAX_URL_LENGTH=2048
@@ -114,6 +114,20 @@ To deploy the application using Docker Compose:
     This will start both the PostgreSQL database and the FastAPI application.
 
     The API will be accessible on port `8000` of your host machine.
+
+### Docker Image
+
+You can also download the latest image from Docker Hub:
+
+- [https://hub.docker.com/repository/docker/jkwlsn/url-shortener/general](https://hub.docker.com/repository/docker/jkwlsn/url-shortener/general)
+
+From your terminal:
+
+    ```bash
+    docker pull jkwlsn/url-shortener:latest
+    ```
+
+You will need to create a valid `.env` file
 
 ## API Documentation
 
