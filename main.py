@@ -14,6 +14,6 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
     yield
 
 
-app: FastAPI = FastAPI(title=settings.app_name)
+app: FastAPI = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 app.include_router(shorten_router)
