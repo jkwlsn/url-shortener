@@ -19,7 +19,7 @@ A simple, RESTful URL shortener API
 
 - Shorten long URLs into concise, memorable short links.
 - Redirect short links to their original long URLs.
-- Links expire after fixed time
+- Set expiry times on short links.
 
 ## Technologies Used
 
@@ -62,7 +62,7 @@ A simple, RESTful URL shortener API
     POSTGRES_PORT=5432
     POSTGRES_DB=url_shortener
 
-    BASE_URL="http://localhost:8000"
+    BASE_URL="http://localhost:8000/" # Make sure there is a trailing slash
     SLUG_LENGTH=7
 
     MAX_URL_LENGTH=2048
@@ -72,10 +72,16 @@ A simple, RESTful URL shortener API
 
     You can replace these values with your own.
 
-4.  **Start the PostgreSQL database and FastAPI application using Docker Compose**
+4.  **Start the PostgreSQL database using Docker Compose**
 
     ```bash
-    docker compose up
+    docker compose up url_shortener_db
+    ```
+
+5. **Start the application using FastAPI dev server**
+
+    ```bash
+    uv run fastapi run main.py
     ```
 
     The API will be accessible at [`http://localhost:8000`](http://localhost:8000).
