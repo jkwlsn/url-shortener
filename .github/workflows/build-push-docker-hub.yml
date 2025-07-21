@@ -44,5 +44,5 @@ jobs:
         with:
           subject-name: index.docker.io/jkwlsn/url-shortener
           subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: false
+          upload-to-registry: false
           show-summary: true
