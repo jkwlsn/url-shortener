@@ -62,12 +62,12 @@ A simple, RESTful URL shortener API
     POSTGRES_PORT=5432
     POSTGRES_DB=url_shortener
 
-    BASE_URL="https://jkwlsn.dev"
+    BASE_URL="http://localhost:8000"
     SLUG_LENGTH=7
 
     MAX_URL_LENGTH=2048
     MIN_URL_LENGTH=15
-    MAX_LINK_AGE
+    MAX_URL_AGE=30
     ```
 
     You can replace these values with your own.

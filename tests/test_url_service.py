@@ -89,7 +89,7 @@ class TestUrlService:
             slug=slug,
             long_url=long_url,
             created_ts=datetime.now(timezone.utc)
-            - timedelta(days=settings.max_link_age + 10),
+            - timedelta(days=settings.max_url_age + 10),
         )
         mock_db = AsyncMock(AsyncSession)
         mock_db.scalar.return_value = test_link
