@@ -48,7 +48,7 @@ class TestUrlService:
         long_url = "https://example.com/a/deep/page/and-some-more-information-here.html"
         short_url = await UrlService().create_short_url(mock_db, long_url)
         assert isinstance(short_url, str)
-        assert short_url == "https://jkwlsn.dev/A1b2C3d"
+        assert short_url == f"{settings.base_url}A1b2C3d"
 
     @pytest.mark.asyncio
     async def test_get_long_url_by_slug_success(self) -> None:
@@ -89,7 +89,7 @@ class TestUrlService:
             slug=slug,
             long_url=long_url,
             created_ts=datetime.now(timezone.utc)
-            - timedelta(days=settings.max_link_age + 10),
+            - timedelta(days=settings.max_url_age + 10),
         )
         mock_db = AsyncMock(AsyncSession)
         mock_db.scalar.return_value = test_link

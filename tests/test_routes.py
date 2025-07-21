@@ -5,15 +5,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from config.config import settings
 from exceptions.exceptions import LinkExpiredError, NoMatchingSlugError
 from main import app
+
+slug = "A1b2C3d"
 
 
 class TestRoutes:
     @pytest.mark.asyncio
     async def test_root(self) -> None:
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url=str(settings.base_url)
         ) as ac:
             response = await ac.get("/")
 
@@ -24,20 +27,20 @@ class TestRoutes:
     async def test_return_short_url_valid_long_url(
         self, mock_create_short_url: MagicMock
     ) -> None:
-        mock_create_short_url.return_value = "https://jkwlsn.dev/A1b2C3d"
+        mock_create_short_url.return_value = f"{settings.base_url}{slug}"
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url=str(settings.base_url)
         ) as ac:
             payload = {"long_url": "https://www.example.com/page"}
             response = await ac.post(url="/shorten", json=payload)
 
         assert response.status_code == 200
-        assert response.json() == {"short_url": "https://jkwlsn.dev/A1b2C3d"}
+        assert response.json() == {"short_url": f"{settings.base_url}{slug}"}
 
     @pytest.mark.asyncio
     async def test_can_not_return_short_url_invalid_long_url(self) -> None:
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url=str(settings.base_url)
         ) as ac:
             payload = {"long_url": "an-invalid-url"}
             response = await ac.post(url="/shorten", json=payload)
@@ -47,7 +50,7 @@ class TestRoutes:
     @pytest.mark.asyncio
     async def test_can_not_return_short_url_long_url_too_long(self) -> None:
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url=str(settings.base_url)
         ) as ac:
             payload = {"long_url": f"https://www.example.com/{'a' * 2500}"}
             response = await ac.post(url="/shorten", json=payload)
@@ -57,7 +60,7 @@ class TestRoutes:
     @pytest.mark.asyncio
     async def test_can_not_return_short_url_long_url_too_short(self) -> None:
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url=str(settings.base_url)
         ) as ac:
             payload = {"long_url": "http://bit.ly/"}
             response = await ac.post(url="/shorten", json=payload)
@@ -72,7 +75,7 @@ class TestRoutes:
     ) -> None:
         mock_create_short_url.side_effect = Exception("Internal error")
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url=str(settings.base_url)
         ) as ac:
             payload = {"long_url": "https://www.example.com/page"}
             response = await ac.post(url="/shorten", json=payload)
@@ -87,9 +90,9 @@ class TestRoutes:
     ) -> None:
         mock_get_long_url.return_value = "https://www.example.com/page"
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url=str(settings.base_url)
         ) as ac:
-            response = await ac.get(url="/ABCD123")
+            response = await ac.get(url=f"/{slug}")
 
         assert response.status_code == 307
         assert response.is_redirect
@@ -101,9 +104,9 @@ class TestRoutes:
     ) -> None:
         mock_get_long_url.side_effect = NoMatchingSlugError("No matching slug found")
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url=str(settings.base_url)
         ) as ac:
-            response = await ac.get(url="/ABCD123")
+            response = await ac.get(url=f"/{slug}")
 
         assert response.status_code == 404
 
@@ -112,11 +115,13 @@ class TestRoutes:
     async def test_return_error_for_expired_link(
         self, mock_get_long_url: MagicMock
     ) -> None:
-        mock_get_long_url.side_effect = LinkExpiredError("ABCD123")
+        mock_get_long_url.side_effect = LinkExpiredError(
+            "ABCD123", settings.max_url_age
+        )
         async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
+            transport=ASGITransport(app=app), base_url=str(settings.base_url)
         ) as ac:
-            response = await ac.get(url="/ABCD123")
+            response = await ac.get(url=f"/{slug}")
         assert response.status_code == 410
         assert response.json() == {
             "detail": "ABCD123 has expired: older than 30 days old."
