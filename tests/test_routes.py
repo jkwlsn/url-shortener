@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from config.config import settings
 from exceptions.exceptions import LinkExpiredError, NoMatchingSlugError
 from main import app
 
@@ -112,7 +113,9 @@ class TestRoutes:
     async def test_return_error_for_expired_link(
         self, mock_get_long_url: MagicMock
     ) -> None:
-        mock_get_long_url.side_effect = LinkExpiredError("ABCD123")
+        mock_get_long_url.side_effect = LinkExpiredError(
+            "ABCD123", settings.max_url_age
+        )
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:

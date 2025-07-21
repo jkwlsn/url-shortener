@@ -33,7 +33,7 @@ class UrlService:
         if not result:
             raise NoMatchingSlugError(slug)
         if self._link_expired(result.created_ts):
-            raise LinkExpiredError(str(result.slug))
+            raise LinkExpiredError(str(result.slug), settings.max_url_age)
         return str(result.long_url)
 
     async def create_short_url(self, db: AsyncSession, long_url: str) -> str:
@@ -89,5 +89,5 @@ class UrlService:
     @staticmethod
     def _link_expired(created_ts: datetime) -> bool:
         return datetime.now(timezone.utc) - created_ts > timedelta(
-            days=settings.max_link_age
+            days=settings.max_url_age
         )
